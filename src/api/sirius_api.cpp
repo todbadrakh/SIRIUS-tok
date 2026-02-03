@@ -2257,6 +2257,17 @@ sirius_set_atom_type_hubbard(void* const* handler__, char const* label__, int co
 {
     call_sirius(
             [&]() {
+        std::cout << "  args: label=" << (label__ ? label__ : "<null>")
+              << ", l=" << (l__ ? *l__ : 0)
+              << ", n=" << (n__ ? *n__ : 0)
+              << ", occ=" << (occ__ ? *occ__ : 0.0)
+              << ", U=" << (U__ ? *U__ : 0.0)
+              << ", J=[" << (J__ ? J__[0] : 0.0) << ", " << (J__ ? J__[1] : 0.0) << ", "
+              << (J__ ? J__[2] : 0.0) << "]"
+              << ", alpha=" << (alpha__ ? *alpha__ : 0.0)
+              << ", beta=" << (beta__ ? *beta__ : 0.0)
+              << ", J0=" << (J0__ ? *J0__ : 0.0) << "\n";
+        std::cout << std::flush;
                 auto& sim_ctx = get_sim_ctx(handler__);
                 auto& type    = sim_ctx.unit_cell().atom_type(std::string(label__));
                 type.hubbard_correction(true);
