@@ -386,6 +386,10 @@ def parse_pswfc(upf_dict, upf_str):
 
         wf['radial_function'] = read_mesh_data(upf, upf_dict['header']['mesh_size'])
         upf_dict['atomic_wave_functions'].append(wf)
+        print(
+            "atomic_wave_functions[%d]: label=%s l=%d occ=%g radial_size=%d"
+            % (i, wf['label'], wf['angular_momentum'], wf['occupation'], len(wf['radial_function']))
+        )
     upf.close()
 
 #

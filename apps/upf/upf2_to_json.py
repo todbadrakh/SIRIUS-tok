@@ -286,6 +286,10 @@ def parse_pswfc(upf_dict, root):
             node = root.findall("./PP_SPIN_ORB/PP_RELWFC.%i" % (i + 1))[0]
             wfc['total_angular_momentum'] = float(node.attrib['jchi'])
         upf_dict['atomic_wave_functions'].append(wfc)
+        print(
+            "atomic_wave_functions[%d]: l=%d occ=%g radial_size=%d"
+            % (i, wfc['angular_momentum'], wfc['occupation'], len(wfc['radial_function']))
+        )
 
 
 ####################################################
