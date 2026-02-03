@@ -1272,6 +1272,20 @@ Atom_type::add_hubbard_orbital(int n__, int l__, double occ__, double U, double 
         }
     }
     if (idx_rf == -1) {
+        for (int s = 0; s < static_cast<int>(ps_atomic_wfs_.size()); s++) {
+            auto& e  = ps_atomic_wfs_[s];
+            auto aqn = e.am;
+            if (aqn.l() == l__) {
+                idx_rf = s;
+                std::cout << "Warning: Hubbard orbital (n=" << n__ << ", l=" << l__
+                          << ") not found for atom type " << label_
+                          << ". Falling back to first matching l-only orbital with n=" << e.n << ".\n";
+                std::cout << std::flush;
+                break;
+            }
+        }
+    }
+    if (idx_rf == -1) {
         std::stringstream s;
         s << "atomic radial function is not found for atom type " << label_ << std::endl
           << "  the following atomic wave-functions are set: " << std::endl;
