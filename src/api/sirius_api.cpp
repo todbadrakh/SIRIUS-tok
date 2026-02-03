@@ -16,6 +16,7 @@
 #include <ctime>
 #include <iomanip>
 #include <iostream>
+#include <source_location>
 #include <string>
 #include "core/any_ptr.hpp"
 #include "core/profiler.hpp"
@@ -235,9 +236,9 @@ sirius_exit(int error_code__, std::string msg__ = "")
 
 template <typename F>
 static void
-call_sirius_impl(F&& f__, int* error_code__, char const* api_name__)
+call_sirius(F&& f__, int* error_code__, std::source_location loc = std::source_location::current())
 {
-  if (api_name__ != nullptr) {
+  if (loc.function_name() != nullptr) {
   auto now      = std::chrono::system_clock::now();
   auto now_time = std::chrono::system_clock::to_time_t(now);
   std::tm tm_snapshot;
@@ -246,7 +247,8 @@ call_sirius_impl(F&& f__, int* error_code__, char const* api_name__)
 #else
   localtime_r(&now_time, &tm_snapshot);
 #endif
-  std::cout << std::put_time(&tm_snapshot, "%Y-%m-%d %H:%M:%S") << " SIRIUS API call: " << api_name__
+    std::cout << std::put_time(&tm_snapshot, "%Y-%m-%d %H:%M:%S") << " SIRIUS API call: "
+          << loc.function_name()
       << "\n";
     std::cout << std::flush;
   }
@@ -282,8 +284,6 @@ call_sirius_impl(F&& f__, int* error_code__, char const* api_name__)
     }
   }
 }
-
-#define call_sirius(f__, error_code__) call_sirius_impl((f__), (error_code__), __func__)
 
 template <typename T>
 auto

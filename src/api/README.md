@@ -59,15 +59,16 @@ All C/Fortran API entry points that use `call_sirius` now emit a simple trace li
 YYYY-MM-DD HH:MM:SS SIRIUS API call: <function_name>
 ```
 
-This is implemented inside `call_sirius` in [src/api/sirius_api.cpp](src/api/sirius_api.cpp) using the C++ `__func__`
-macro, so the logged name matches the public API function being called (for example, `sirius_initialize`).
+This is implemented inside `call_sirius` in [src/api/sirius_api.cpp](src/api/sirius_api.cpp) using C++20
+`std::source_location`, so the logged name matches the public API function being called (for example,
+`sirius_initialize`).
 
 ### Details
 
 - **Where**: Centralized in `call_sirius` so every entry point that wraps work in `call_sirius(...)` is traced.
 - **Format**: Local time in `$YYYY-MM-DD HH:MM:SS$` followed by the literal `SIRIUS API call:` and the C API
   function name.
-- **Source**: Uses `std::chrono::system_clock` and `std::put_time` for formatting.
+- **Source**: Uses `std::chrono::system_clock`, `std::put_time`, and `std::source_location::current()`.
 
 Example output:
 
