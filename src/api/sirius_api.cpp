@@ -239,6 +239,15 @@ static void
 call_sirius(F&& f__, int* error_code__, std::source_location loc = std::source_location::current())
 {
   if (loc.function_name() != nullptr) {
+    std::string_view fn = loc.function_name();
+    if (fn.find("sirius_start_timer") != std::string_view::npos ||
+      fn.find("sirius_stop_timer") != std::string_view::npos) {
+      f__();
+      if (error_code__) {
+        *error_code__ = SIRIUS_SUCCESS;
+      }
+      return;
+    }
   auto now      = std::chrono::system_clock::now();
   auto now_time = std::chrono::system_clock::to_time_t(now);
   std::tm tm_snapshot;
