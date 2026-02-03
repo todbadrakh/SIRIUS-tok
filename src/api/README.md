@@ -51,6 +51,30 @@ call_sirius([&]()
 }, error_code__);
 ```
 
+## API call logging
+
+All C/Fortran API entry points that use `call_sirius` now emit a simple trace line to stdout on entry:
+
+```
+YYYY-MM-DD HH:MM:SS SIRIUS API call: <function_name>
+```
+
+This is implemented inside `call_sirius` in [src/api/sirius_api.cpp](src/api/sirius_api.cpp) using the C++ `__func__`
+macro, so the logged name matches the public API function being called (for example, `sirius_initialize`).
+
+### Details
+
+- **Where**: Centralized in `call_sirius` so every entry point that wraps work in `call_sirius(...)` is traced.
+- **Format**: Local time in `$YYYY-MM-DD HH:MM:SS$` followed by the literal `SIRIUS API call:` and the C API
+  function name.
+- **Source**: Uses `std::chrono::system_clock` and `std::put_time` for formatting.
+
+Example output:
+
+```
+2026-02-03 14:27:05 SIRIUS API call: sirius_initialize
+```
+
 On the Fortran side all pointers are declared as
 ```
 type(C_PTR) :: var
