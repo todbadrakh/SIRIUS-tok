@@ -13,6 +13,8 @@
 
 #include "potential.hpp"
 #include "symmetry/symmetrize_mt_function.hpp"
+#include "core/pp_debug_dump.hpp"
+#include "core/serialize_mdarray.hpp"
 
 namespace sirius {
 
@@ -111,6 +113,23 @@ Potential::generate_PAW_effective_potential(Density const& density)
                 }
             }
         }
+    }
+
+    {
+        nlohmann::json out = nlohmann::json::object();
+        out["step"] = "paw_dij";
+        out["rank"] = ctx_.comm().rank();
+        out["paw_atoms"] = nlohmann::json::array();
+        for (int i = 0; i < unit_cell_.num_paw_atoms(); i++) {
+            auto ia = unit_cell_.paw_atom_index(typename paw_atom_index_t::global(i));
+            nlohmann::json atom = nlohmann::json::object();
+            atom["paw_index"] = i;
+            atom["ia"] = static_cast<int>(ia);
+            atom["d_mtrx_paw"] = serialize(d_mtrx_paw_[i]);
+            atom["d_mtrx_total"] = serialize(d_mtrx_[ia]);
+            out["paw_atoms"].push_back(atom);
+        }
+        pp_debug_dump::write_json(out, "step_04_paw_dij", ctx_.comm().rank());
     }
 }
 

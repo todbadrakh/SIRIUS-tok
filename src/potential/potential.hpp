@@ -21,6 +21,8 @@
 #include "xc_functional.hpp"
 #include "dftd3_correction.hpp"
 #include "dftd4_correction.hpp"
+#include "core/serialize_mdarray.hpp"
+#include "core/pp_debug_dump.hpp"
 
 namespace sirius {
 
@@ -272,6 +274,15 @@ class Potential : public Field4D
             auto cs1 = local_potential_->checksum_rg();
             print_checksum("local_potential_pw", cs, ctx_.out());
             print_checksum("local_potential_rg", cs1, ctx_.out());
+        }
+
+        {
+            nlohmann::json out = nlohmann::json::object();
+            out["step"]   = "local_potential";
+            out["rank"]   = ctx_.comm().rank();
+            out["f_rg"]   = serialize(local_potential_->values());
+            out["f_pw"]   = serialize(local_potential_->f_pw_local());
+            pp_debug_dump::write_json(out, "step_01_local_potential", ctx_.comm().rank());
         }
     }
 

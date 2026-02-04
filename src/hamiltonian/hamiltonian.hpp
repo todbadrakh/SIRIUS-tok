@@ -22,6 +22,8 @@
 #include "core/la/dmatrix.hpp"
 #include "local_operator.hpp"
 #include "non_local_operator.hpp"
+#include "core/pp_debug_dump.hpp"
+#include "core/json.hpp"
 
 namespace sirius {
 /* forward declaration */
@@ -512,6 +514,33 @@ class Hamiltonian_k
             if (sphi__) {
                 auto cs = sphi__->checksum(mem, br__);
                 print_checksum("hsphi", cs, RTE_OUT(H0().ctx().out()));
+            }
+        }
+
+        {
+            static bool dumped = false;
+            if (!dumped && !pp_debug_dump::dir().empty()) {
+                dumped = true;
+                auto to_json_complex = [](std::complex<T> const& z) {
+                    nlohmann::json j = nlohmann::json::array();
+                    j.push_back(z.real());
+                    j.push_back(z.imag());
+                    return j;
+                };
+                nlohmann::json out = nlohmann::json::object();
+                out["step"] = "apply_h_s";
+                out["rank"] = H0().ctx().comm().rank();
+                out["num_spins"] = H0().ctx().num_spins();
+                out["num_bands"] = br__.size();
+                out["num_gkvec_loc"] = kp_.num_gkvec_loc();
+                out["phi_checksum"] = to_json_complex(phi__.checksum(mem, br__));
+                if (hphi__) {
+                    out["hphi_checksum"] = to_json_complex(hphi__->checksum(mem, br__));
+                }
+                if (sphi__) {
+                    out["sphi_checksum"] = to_json_complex(sphi__->checksum(mem, br__));
+                }
+                pp_debug_dump::write_json(out, "step_08_apply_h_s", H0().ctx().comm().rank());
             }
         }
     }

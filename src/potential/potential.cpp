@@ -335,6 +335,21 @@ Potential::generate(Density const& density__, bool use_symmetry__, bool transfor
         }
     }
 
+    {
+        nlohmann::json out = nlohmann::json::object();
+        out["step"] = "effective_potential";
+        out["rank"] = ctx_.comm().rank();
+        out["components"] = nlohmann::json::array();
+        for (int j = 0; j < ctx_.num_mag_dims() + 1; j++) {
+            nlohmann::json comp = nlohmann::json::object();
+            comp["index"] = j;
+            comp["f_rg"] = serialize(component(j).rg().values());
+            comp["f_pw"] = serialize(component(j).rg().f_pw_local());
+            out["components"].push_back(comp);
+        }
+        pp_debug_dump::write_json(out, "step_02_effective_potential", ctx_.comm().rank());
+    }
+
     if (!ctx_.full_potential()) {
         /* this is needed later to compute scf correction to forces */
         for (size_t ig = 0; ig < effective_potential().rg().f_pw_local().size(); ig++) {

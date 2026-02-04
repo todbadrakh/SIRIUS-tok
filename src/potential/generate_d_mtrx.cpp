@@ -12,6 +12,8 @@
  */
 
 #include "potential.hpp"
+#include "core/pp_debug_dump.hpp"
+#include "core/serialize_mdarray.hpp"
 
 namespace sirius {
 
@@ -211,6 +213,20 @@ Potential::generate_d_mtrx()
             }
         } // iv
     } // iat
+
+    {
+        nlohmann::json out = nlohmann::json::object();
+        out["step"] = "d_mtrx";
+        out["rank"] = ctx_.comm().rank();
+        out["atoms"] = nlohmann::json::array();
+        for (int ia = 0; ia < unit_cell_.num_atoms(); ia++) {
+            nlohmann::json atom = nlohmann::json::object();
+            atom["ia"] = ia;
+            atom["d_mtrx"] = serialize(d_mtrx_[ia]);
+            out["atoms"].push_back(atom);
+        }
+        pp_debug_dump::write_json(out, "step_03_d_mtrx", ctx_.comm().rank());
+    }
 }
 
 } // namespace sirius

@@ -15,6 +15,8 @@
 #define __BETA_PROJECTORS_HPP__
 
 #include "beta_projectors_base.hpp"
+#include "core/pp_debug_dump.hpp"
+#include "core/serialize_mdarray.hpp"
 
 namespace sirius {
 
@@ -76,6 +78,14 @@ class Beta_projectors : public Beta_projectors_base<T>
             if (comm.rank() == 0) {
                 print_checksum("beta_pw_coeffs_t", c1, std::cout);
             }
+        }
+
+        {
+            nlohmann::json out = nlohmann::json::object();
+            out["step"] = "beta_projectors";
+            out["rank"] = this->ctx_.comm().rank();
+            out["pw_coeffs_t"] = serialize(this->pw_coeffs_t_);
+            pp_debug_dump::write_json(out, "step_07_beta_projectors", this->ctx_.comm().rank());
         }
     }
 

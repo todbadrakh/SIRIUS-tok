@@ -15,6 +15,8 @@
 #include "beta_projectors/beta_projectors_base.hpp"
 #include "hubbard/hubbard_matrix.hpp"
 #include "potential/potential.hpp"
+#include "core/pp_debug_dump.hpp"
+#include "core/serialize_mdarray.hpp"
 
 namespace sirius {
 
@@ -269,6 +271,14 @@ D_operator<T>::initialize(Potential& potential__)
     if (this->ctx_.num_mag_dims() == 3) {
         this->is_diag_ = false;
     }
+
+    {
+        nlohmann::json out = nlohmann::json::object();
+        out["step"] = "d_operator";
+        out["rank"] = this->ctx_.comm().rank();
+        out["op"] = serialize(this->op_);
+        pp_debug_dump::write_json(out, "step_05_d_operator", this->ctx_.comm().rank());
+    }
 }
 
 template <typename T>
@@ -366,6 +376,14 @@ Q_operator<T>::initialize()
         if (uc.atom_type(iat).spin_orbit_coupling()) {
             this->is_diag_ = false;
         }
+    }
+
+    {
+        nlohmann::json out = nlohmann::json::object();
+        out["step"] = "q_operator";
+        out["rank"] = this->ctx_.comm().rank();
+        out["op"] = serialize(this->op_);
+        pp_debug_dump::write_json(out, "step_06_q_operator", this->ctx_.comm().rank());
     }
 }
 
