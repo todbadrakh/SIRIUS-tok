@@ -21,6 +21,7 @@
 #include <string>
 #include "core/any_ptr.hpp"
 #include "core/profiler.hpp"
+#include "core/pp_debug_dump.hpp"
 #include "error_codes.hpp"
 #ifdef SIRIUS_NLCGLIB
 #include "nlcglib/adaptor.hpp"
@@ -1260,6 +1261,16 @@ sirius_initialize_context(void* const* handler__, int* error_code__)
             out["atom_types"][at.label()] = at.serialize();
           }
           fi << out.dump(4);
+        }
+        {
+          json out = json::object();
+          out["step"] = "pseudo";
+          out["atom_types"] = json::object();
+          for (int iat = 0; iat < sim_ctx.unit_cell().num_atom_types(); iat++) {
+            auto& at = sim_ctx.unit_cell().atom_type(iat);
+            out["atom_types"][at.label()] = at.serialize();
+          }
+          pp_debug_dump::write_json(out, "step_00_pseudo", sim_ctx.comm().rank());
         }
                 return 0;
             },
