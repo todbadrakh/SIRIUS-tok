@@ -248,6 +248,20 @@ initialize_subspace(Hamiltonian_k<T> const& Hk__, K_point<T>& kp__, int num_ao__
         //    }
 
         /* solve generalized eigen-value problem with the size N and get lowest num_bands eigen-vectors */
+        if (debug_init) {
+            auto diag = ovlp.get_diag(num_phi_tot);
+            auto diag_ptr = diag.at(memory_t::host);
+            real_type<F> min_diag = diag_ptr[0];
+            real_type<F> max_diag = diag_ptr[0];
+            for (int i = 1; i < num_phi_tot; i++) {
+                min_diag = std::min(min_diag, diag_ptr[i]);
+                max_diag = std::max(max_diag, diag_ptr[i]);
+            }
+            if (kp__.comm().rank() == 0) {
+                RTE_OUT(ctx.out()) << "initialize_subspace debug: ovlp diag min=" << min_diag
+                                   << " max=" << max_diag << std::endl;
+            }
+        }
         if (gen_solver.solve(num_phi_tot, num_bands, hmlt, ovlp, eval.data(), evec)) {
             if (debug_init && kp__.comm().rank() == 0) {
                 RTE_OUT(ctx.out()) << "initialize_subspace debug: gen_evp_solver failed: num_phi_tot="
