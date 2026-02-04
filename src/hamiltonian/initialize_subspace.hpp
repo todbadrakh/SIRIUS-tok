@@ -16,6 +16,7 @@
 
 #include "k_point/k_point_set.hpp"
 #include "diagonalize_pp.hpp"
+#include <complex>
 #include <cstdlib>
 #include <string>
 
@@ -251,11 +252,12 @@ initialize_subspace(Hamiltonian_k<T> const& Hk__, K_point<T>& kp__, int num_ao__
         if (debug_init) {
             auto diag = ovlp.get_diag(num_phi_tot);
             auto diag_ptr = diag.at(memory_t::host);
-            real_type<F> min_diag = diag_ptr[0];
-            real_type<F> max_diag = diag_ptr[0];
+            real_type<F> min_diag = std::real(diag_ptr[0]);
+            real_type<F> max_diag = std::real(diag_ptr[0]);
             for (int i = 1; i < num_phi_tot; i++) {
-                min_diag = std::min(min_diag, diag_ptr[i]);
-                max_diag = std::max(max_diag, diag_ptr[i]);
+                auto v = std::real(diag_ptr[i]);
+                min_diag = std::min(min_diag, v);
+                max_diag = std::max(max_diag, v);
             }
             if (kp__.comm().rank() == 0) {
                 RTE_OUT(ctx.out()) << "initialize_subspace debug: ovlp diag min=" << min_diag
