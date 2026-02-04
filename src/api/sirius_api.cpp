@@ -14,6 +14,7 @@
 #include <ctype.h>
 #include <chrono>
 #include <ctime>
+#include <cstdlib>
 #include <iomanip>
 #include <iostream>
 #include <source_location>
@@ -1240,6 +1241,16 @@ sirius_initialize_context(void* const* handler__, int* error_code__)
             [&]() {
                 auto& sim_ctx = get_sim_ctx(handler__);
                 sim_ctx.initialize();
+        if (auto* path = std::getenv("SIRIUS_DUMP_UNIT_CELL_JSON"); path && std::string(path).size()) {
+          bool cart_pos = false;
+          if (auto* cart = std::getenv("SIRIUS_DUMP_UNIT_CELL_JSON_CART"); cart && std::string(cart).size()) {
+            std::string v(cart);
+            cart_pos = (v == "1" || v == "true" || v == "TRUE");
+          }
+          std::ofstream fi(path, std::ofstream::out | std::ofstream::trunc);
+          auto uc_dict = sim_ctx.unit_cell().serialize(cart_pos);
+          fi << uc_dict.dump(4);
+        }
                 return 0;
             },
             error_code__);
@@ -4998,6 +5009,43 @@ sirius_dump_runtime_setup(void* const* handler__, char* filename__, int* error_c
                 std::ofstream fi(filename__, std::ofstream::out | std::ofstream::trunc);
                 auto conf_dict = sim_ctx.serialize();
                 fi << conf_dict.dump(4);
+            },
+            error_code__);
+}
+
+/*
+@api begin
+sirius_dump_unit_cell_json:
+  doc: Dump unit cell (including atom types and pseudopotentials) to a JSON file.
+  arguments:
+    handler:
+      type: ctx_handler
+      attr: in, required
+      doc: Simulation context handler.
+    filename:
+      type: string
+      attr: in, required
+      doc: String containing the name of the file.
+    cart_pos:
+      type: bool
+      attr: in, optional
+      doc: If true, write atomic positions in Cartesian coordinates.
+    error_code:
+      type: int
+      attr: out, optional
+      doc: Error code
+@api end
+*/
+void
+sirius_dump_unit_cell_json(void* const* handler__, char* filename__, bool const* cart_pos__, int* error_code__)
+{
+    call_sirius(
+            [&]() {
+                auto& sim_ctx = get_sim_ctx(handler__);
+                std::ofstream fi(filename__, std::ofstream::out | std::ofstream::trunc);
+                bool cart_pos = (cart_pos__ != nullptr) ? *cart_pos__ : false;
+                auto uc_dict  = sim_ctx.unit_cell().serialize(cart_pos);
+                fi << uc_dict.dump(4);
             },
             error_code__);
 }
