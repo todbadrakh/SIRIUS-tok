@@ -16,6 +16,8 @@
 
 #include "k_point/k_point_set.hpp"
 #include "diagonalize_pp.hpp"
+#include <cstdlib>
+#include <string>
 
 namespace sirius {
 
@@ -57,6 +59,22 @@ initialize_subspace(Hamiltonian_k<T> const& Hk__, K_point<T>& kp__, int num_ao__
 
     int num_phi_tot = num_phi * num_sc;
 
+    bool debug_init{false};
+    if (auto* env = std::getenv("SIRIUS_DEBUG_INIT_SUBSPACE"); env != nullptr) {
+        std::string v(env);
+        debug_init = (v == "1" || v == "true" || v == "TRUE");
+    }
+    if (debug_init && kp__.comm().rank() == 0) {
+        RTE_OUT(ctx.out()) << "initialize_subspace debug: num_ao=" << num_ao__
+                           << ", num_bands=" << num_bands
+                           << ", num_sc=" << num_sc
+                           << ", num_phi=" << num_phi
+                           << ", num_phi_tot=" << num_phi_tot
+                           << ", num_gkvec=" << kp__.num_gkvec()
+                           << ", num_gkvec_loc=" << kp__.num_gkvec_loc()
+                           << ", num_atoms=" << ctx.unit_cell().num_atoms() << std::endl;
+    }
+
     auto& mp = get_memory_pool(ctx.host_memory_t());
 
     print_memory_usage(ctx.out(), FILE_LINE);
@@ -74,6 +92,9 @@ initialize_subspace(Hamiltonian_k<T> const& Hk__, K_point<T>& kp__, int num_ao__
     std::iota(atoms.begin(), atoms.end(), 0);
     kp__.generate_atomic_wave_functions(
             atoms, [&](int iat) { return &ctx.unit_cell().atom_type(iat).indexb_wfs(); }, *ctx.ri().ps_atomic_wf_, phi);
+    if (debug_init && kp__.comm().rank() == 0) {
+        RTE_OUT(ctx.out()) << "initialize_subspace debug: atomic wavefunctions generated" << std::endl;
+    }
 
     /* generate some random noise */
     std::vector<T> tmp(4096);
@@ -228,6 +249,10 @@ initialize_subspace(Hamiltonian_k<T> const& Hk__, K_point<T>& kp__, int num_ao__
 
         /* solve generalized eigen-value problem with the size N and get lowest num_bands eigen-vectors */
         if (gen_solver.solve(num_phi_tot, num_bands, hmlt, ovlp, eval.data(), evec)) {
+            if (debug_init && kp__.comm().rank() == 0) {
+                RTE_OUT(ctx.out()) << "initialize_subspace debug: gen_evp_solver failed: num_phi_tot="
+                                   << num_phi_tot << ", num_bands=" << num_bands << std::endl;
+            }
             RTE_THROW("error in diagonalization");
         }
 

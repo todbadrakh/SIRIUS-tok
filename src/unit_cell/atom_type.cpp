@@ -16,6 +16,7 @@
 #include "core/traits.hpp"
 #include "potential/xc_functional_base.hpp"
 #include <algorithm>
+#include <cstdlib>
 #include <vector>
 
 namespace sirius {
@@ -1272,16 +1273,23 @@ Atom_type::add_hubbard_orbital(int n__, int l__, double occ__, double U, double 
         }
     }
     if (idx_rf == -1) {
-        for (int s = 0; s < static_cast<int>(ps_atomic_wfs_.size()); s++) {
-            auto& e  = ps_atomic_wfs_[s];
-            auto aqn = e.am;
-            if (aqn.l() == l__) {
-                idx_rf = s;
-                std::cout << "Warning: Hubbard orbital (n=" << n__ << ", l=" << l__
-                          << ") not found for atom type " << label_
-                          << ". Falling back to first matching l-only orbital with n=" << e.n << ".\n";
-                std::cout << std::flush;
-                break;
+        const char* l_only_fallback_env = std::getenv("SIRIUS_HUBBARD_L_ONLY_FALLBACK");
+        bool l_only_fallback            = (l_only_fallback_env != nullptr) &&
+                               (std::string(l_only_fallback_env) == "1" ||
+                                std::string(l_only_fallback_env) == "true" ||
+                                std::string(l_only_fallback_env) == "TRUE");
+        if (l_only_fallback) {
+            for (int s = 0; s < static_cast<int>(ps_atomic_wfs_.size()); s++) {
+                auto& e  = ps_atomic_wfs_[s];
+                auto aqn = e.am;
+                if (aqn.l() == l__) {
+                    idx_rf = s;
+                    std::cout << "Warning: Hubbard orbital (n=" << n__ << ", l=" << l__
+                              << ") not found for atom type " << label_
+                              << ". Falling back to first matching l-only orbital with n=" << e.n << ".\n";
+                    std::cout << std::flush;
+                    break;
+                }
             }
         }
     }
