@@ -1251,6 +1251,16 @@ sirius_initialize_context(void* const* handler__, int* error_code__)
           auto uc_dict = sim_ctx.unit_cell().serialize(cart_pos);
           fi << uc_dict.dump(4);
         }
+        if (auto* path = std::getenv("SIRIUS_DUMP_PSEUDO_JSON"); path && std::string(path).size()) {
+          std::ofstream fi(path, std::ofstream::out | std::ofstream::trunc);
+          json out      = json::object();
+          out["atom_types"] = json::object();
+          for (int iat = 0; iat < sim_ctx.unit_cell().num_atom_types(); iat++) {
+            auto& at = sim_ctx.unit_cell().atom_type(iat);
+            out["atom_types"][at.label()] = at.serialize();
+          }
+          fi << out.dump(4);
+        }
                 return 0;
             },
             error_code__);
@@ -5046,6 +5056,43 @@ sirius_dump_unit_cell_json(void* const* handler__, char* filename__, bool const*
                 bool cart_pos = (cart_pos__ != nullptr) ? *cart_pos__ : false;
                 auto uc_dict  = sim_ctx.unit_cell().serialize(cart_pos);
                 fi << uc_dict.dump(4);
+            },
+            error_code__);
+}
+
+/*
+@api begin
+sirius_dump_pseudopotential_json:
+  doc: Dump pseudopotential and atomic wavefunction metadata to a JSON file.
+  arguments:
+    handler:
+      type: ctx_handler
+      attr: in, required
+      doc: Simulation context handler.
+    filename:
+      type: string
+      attr: in, required
+      doc: String containing the name of the file.
+    error_code:
+      type: int
+      attr: out, optional
+      doc: Error code
+@api end
+*/
+void
+sirius_dump_pseudopotential_json(void* const* handler__, char* filename__, int* error_code__)
+{
+    call_sirius(
+            [&]() {
+                auto& sim_ctx = get_sim_ctx(handler__);
+                std::ofstream fi(filename__, std::ofstream::out | std::ofstream::trunc);
+                json out      = json::object();
+                out["atom_types"] = json::object();
+                for (int iat = 0; iat < sim_ctx.unit_cell().num_atom_types(); iat++) {
+                    auto& at = sim_ctx.unit_cell().atom_type(iat);
+                    out["atom_types"][at.label()] = at.serialize();
+                }
+                fi << out.dump(4);
             },
             error_code__);
 }
